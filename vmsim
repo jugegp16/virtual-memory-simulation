@@ -1,19 +1,76 @@
 #!/usr/bin/env python3
 import argparse
 
-def run():
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-a', '--policy', type=str, choices = ['opt', 'lru'])
-        parser.add_argument('-n', '--numFrames', type=int)
-        parser.add_argument('-p', '--pageSize', type=int)
-        parser.add_argument('-s', '--memorySplit', type=str)
-        parser.add_argument('tracefile', type=str)
-        contents = parser.parse_args()
-        # if (contents.policy == 'lru'):
-        #     # lru
-        # else:
-        #     # optimal
-        print(contents.policy)
+class memiry
+
+class virtual_memory_sim():
+    '''
+
+    Virtual memory simulator
+    Run through the memory references of the trace file
+    Decide the action taken for each address 
+        * memory hit
+        * page fault with no eviction
+        * page fault and evict clean page
+        * page fault and evict dirty page
+        
+    After dealing with all the memory references for both simulated processes
+    print out summary statistics in the following format
+
+    '''
+    def __init__(self):
+        self.parser = argparse.ArgumentParser()
+        self.algorithm = 'opt'
+        self.frames = 8
+        self.pageSize = 8
+        self.memorySplit = '1:2'
+
+    def parse_args(self):
+        self.parser.add_argument('-a', '--algorithm',     type=str, choices = ['opt', 'lru'])
+        self.parser.add_argument('-n', '--frames',  type=int)
+        self.parser.add_argument('-p', '--pageSize',   type=int)
+        self.parser.add_argument('-s', '--memorySplit',type=str)
+        self.parser.add_argument('tracefile', type=str)
+        contents = self.parser.parse_args()
+        if (contents.policy == 'lru' or contents.policy == 'opt' ):
+            self.algorithm = contents.policy
+        if (contents.frames != NULL):
+            self.frames = contents.frames
+        if (contents.pageSize != NULL):
+            self.pageSize = contents.pageSize
+        if (contents.memorySplit != NULL):
+            self.memorySplit = contents.memorySplit
+
+    def apply_split(self):
+    '''
+        Apply the memory split between the two processes.
+            'a:b' --> where a and b are positive integers > 0 that represent the ratios of each process's memory allocation. 
+            1:2 split means that the second process gets twice as many frames as the first process (i.e., the first process gets one third and the second two thirds). 
+            The sum of a and b evenly divided the total number of frames.
+
+        then initialize two objects to track each process.
+    '''
+    
+    def lru_sim(self):
+        # run lru simulation
+    
+    def opt_sim(self):
+        # do sim
+
+
+class physical_memory():
+    '''
+    '''
+    def __init__(self, frames):
+        self.frames = frames
+        self.entries = []
+    
+
 
 if __name__ == "__main__":
-    run()
+    vm_sim = virtual_memory_sim()
+    vm_sim.parse_args()
+    if (vm_sim.algorithm == 'lru'):
+        vm_sim.lru_sim()
+    else:
+        vm_sim.opt_sim()
