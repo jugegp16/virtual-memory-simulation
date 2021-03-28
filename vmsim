@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 
-class memiry
-
 class virtual_memory_sim():
     '''
 
@@ -24,42 +22,48 @@ class virtual_memory_sim():
         self.frames = 8
         self.pageSize = 8
         self.memorySplit = '1:2'
+        self.tracefilePath = ''
 
     def parse_args(self):
         self.parser.add_argument('-a', '--algorithm',     type=str, choices = ['opt', 'lru'])
-        self.parser.add_argument('-n', '--frames',  type=int)
+        self.parser.add_argument('-n', '--numFrames',  type=int)
         self.parser.add_argument('-p', '--pageSize',   type=int)
         self.parser.add_argument('-s', '--memorySplit',type=str)
         self.parser.add_argument('tracefile', type=str)
         contents = self.parser.parse_args()
-        if (contents.policy == 'lru' or contents.policy == 'opt' ):
-            self.algorithm = contents.policy
-        if (contents.frames != NULL):
-            self.frames = contents.frames
-        if (contents.pageSize != NULL):
+        if (contents.algorithm == 'lru' or contents.algorithm == 'opt' ):
+            self.algorithm = contents.algorithm
+        if (contents.numFrames != 0):
+            self.numFrames = contents.numFrames
+        if (contents.pageSize != 0):
             self.pageSize = contents.pageSize
-        if (contents.memorySplit != NULL):
+        if (contents.memorySplit != ''):
             self.memorySplit = contents.memorySplit
+        if (contents.tracefile != ''):
+            self.tracefile = contents.tracefile
 
     def apply_split(self):
-    '''
-        Apply the memory split between the two processes.
-            'a:b' --> where a and b are positive integers > 0 that represent the ratios of each process's memory allocation. 
-            1:2 split means that the second process gets twice as many frames as the first process (i.e., the first process gets one third and the second two thirds). 
-            The sum of a and b evenly divided the total number of frames.
+        '''
+            Apply the memory split between the two processes.
+                'a:b' --> where a and b are positive integers > 0 that represent the ratios of each process's memory allocation. 
+                1:2 split means that the second process gets twice as many frames as the first process (i.e., the first process gets one third and the second two thirds). 
+                The sum of a and b evenly divided the total number of frames.
 
-        then initialize two objects to track each process.
-    '''
+            then initialize two objects to track each process.
+        '''
     
-    def lru_sim(self):
-        # run lru simulation
-    
-    def opt_sim(self):
-        # do sim
+    def run_sim(self):
+        file = open(self.tracefile)
+        for i, line in enumerate(file):
+            if (i>10):
+                break
+
+            print(line)
 
 
-class physical_memory():
+class lru_sim():
     '''
+
     '''
     def __init__(self, frames):
         self.frames = frames
@@ -70,7 +74,4 @@ class physical_memory():
 if __name__ == "__main__":
     vm_sim = virtual_memory_sim()
     vm_sim.parse_args()
-    if (vm_sim.algorithm == 'lru'):
-        vm_sim.lru_sim()
-    else:
-        vm_sim.opt_sim()
+    vm_sim.run_sim()
