@@ -102,8 +102,6 @@ class virtual_memory_sim():
                 else:
                     table.entries[frame] = (0, i)
 
-            if (i>400):
-                break
             
             table1 = table if line[2]==0 else table1
             table2 = table if line[2]==1 else table2
