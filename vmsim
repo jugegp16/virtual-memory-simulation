@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import argparse
+import math
+import sys
 
 class virtual_memory_sim():
     '''
@@ -18,29 +20,28 @@ class virtual_memory_sim():
     '''
     def __init__(self):
         self.parser = argparse.ArgumentParser()
-        self.algorithm = 'opt'
-        self.frames = 8
-        self.pageSize = 8
-        self.memorySplit = '1:2'
-        self.tracefilePath = ''
+        self.algorithm = ''
+        self.frames = 0
+        self.page_size = 0
+        self.memory_split = ''
+        self.tracefile = ''
+
+        self.memory_accesses = 0
+        self.page_faults = 0
+        self.disk_writes = 0
 
     def parse_args(self):
         self.parser.add_argument('-a', '--algorithm',     type=str, choices = ['opt', 'lru'])
-        self.parser.add_argument('-n', '--numFrames',  type=int)
-        self.parser.add_argument('-p', '--pageSize',   type=int)
-        self.parser.add_argument('-s', '--memorySplit',type=str)
+        self.parser.add_argument('-n', '--numframes',  type=int)
+        self.parser.add_argument('-p', '--pagesize',   type=int)
+        self.parser.add_argument('-s', '--memorysplit',type=str)
         self.parser.add_argument('tracefile', type=str)
         contents = self.parser.parse_args()
-        if (contents.algorithm == 'lru' or contents.algorithm == 'opt' ):
-            self.algorithm = contents.algorithm
-        if (contents.numFrames != 0):
-            self.numFrames = contents.numFrames
-        if (contents.pageSize != 0):
-            self.pageSize = contents.pageSize
-        if (contents.memorySplit != ''):
-            self.memorySplit = contents.memorySplit
-        if (contents.tracefile != ''):
-            self.tracefile = contents.tracefile
+        if (contents.algorithm != '' ): self.algorithm = contents.algorithm
+        if (contents.numframes != 0): self.frames = contents.numframes
+        if (contents.pagesize != 0):  self.page_size = contents.pagesize
+        if (contents.memorysplit != ''): self.memory_split = contents.memorysplit
+        if (contents.tracefile != ''):   self.tracefile = contents.tracefile
 
     def apply_split(self):
         '''
@@ -50,24 +51,84 @@ class virtual_memory_sim():
                 The sum of a and b evenly divided the total number of frames.
 
             then initialize two objects to track each process.
+
+            returns --> two tables with split frames.
         '''
+        if (int(self.memory_split[0]) < 0 or int(self.memory_split[2]) < 0 ):
+            return -1
+        ratio1 = int(self.memory_split[0]) / (int(self.memory_split[0])+int(self.memory_split[2]))
+        ratio2 = int(self.memory_split[2]) / (int(self.memory_split[0])+int(self.memory_split[2]))
+        return table(ratio1*self.frames), table(ratio2*self.frames)
+
     
     def run_sim(self):
-        file = open(self.tracefile)
-        for i, line in enumerate(file):
-            if (i>10):
+        table1, table2 = self.apply_split()
+        for i, line in enumerate(open(self.tracefile)):
+            line = line.split(' ')
+            dirty_bit = 0 if line[0]=='l' else 1
+            shift  =  int(math.log(int(self.page_size),2))
+            frame = line[1][2:(len(line[1])-shift)]
+            offset = line[1][(len(line[1])-shift):]
+            table = table1 if line[2]==0 else table2
+            
+            # miss
+            if frame not in table.entries.keys():
+                self.page_faults += 1
+
+                if table.isFull():
+
+                    # find lru
+                    lru = sys.maxsize
+                    frame_to_evict = None
+                    for frame in table.entries.keys():
+                        if table.entries[frame][1] < lru:
+                            lru = table.entries[frame][1]
+                            frame_to_evict = frame
+
+                    # check dirty bit
+                    if table.entries[frame_to_evict][0] == 1:
+                        self.disk_writes += 1
+                    
+                    # evict lru
+                    table.entries[frame_to_evict] = (dirty_bit, i)
+                else:
+                    table.entries[frame] = (dirty_bit, i)
+                
+            # hit
+            else:
+                # update entry with new lru_counter and dirty bit
+                if table.entries[frame][0] == 1 or dirty_bit == 1:
+                    table.entries[frame] = (1, i)
+                else:
+                    table.entries[frame] = (0, i)
+
+            if (i>400):
                 break
+            
+            table1 = table if line[2]==0 else table1
+            table2 = table if line[2]==1 else table2
+        
+        self.memory_accesses = i   
+    
+    # change to __str__
+    def print_results(self):
+        print("Algorithm: " + self.algorithm.upper())
+        print("Number of Frames: " + str(self.frames))
+        print("Total Memory Accesses: " + str(self.memory_accesses))
+        print("Total Page Faults: " + str(self.page_faults))
+        print("Total Writes to Disk: " + str(self.disk_writes))
 
-            print(line)
-
-
-class lru_sim():
+class table():
     '''
 
     '''
     def __init__(self, frames):
         self.frames = frames
-        self.entries = []
+        self.entries = {}
+    
+    def isFull(self):
+        if len(self.entries) == self.frames: return True
+        return False
     
 
 
@@ -75,3 +136,4 @@ if __name__ == "__main__":
     vm_sim = virtual_memory_sim()
     vm_sim.parse_args()
     vm_sim.run_sim()
+    vm_sim.print_results()
