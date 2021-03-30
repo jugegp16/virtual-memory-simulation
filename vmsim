@@ -6,16 +6,16 @@ import sys
 class virtual_memory_sim():
     '''
 
-    Virtual memory simulator
-    Run through the memory references of the trace file
-    Decide the action taken for each address 
-        * memory hit
-        * page fault with no eviction
-        * page fault and evict clean page
-        * page fault and evict dirty page
-        
-    After dealing with all the memory references for both simulated processes
-    print out summary statistics in the following format
+        Virtual memory simulator
+        Run through the memory references of the trace file
+        Decide the action taken for each address 
+            * memory hit
+            * page fault with no eviction
+            * page fault and evict clean page
+            * page fault and evict dirty page
+            
+        After dealing with all the memory references for both simulated processes
+        print out summary statistics in the following format
 
     '''
     def __init__(self):
@@ -25,7 +25,6 @@ class virtual_memory_sim():
         self.page_size = 0
         self.memory_split = ''
         self.tracefile = ''
-
         self.memory_accesses = 0
         self.page_faults = 0
         self.disk_writes = 0
@@ -43,16 +42,10 @@ class virtual_memory_sim():
         if (contents.memorysplit != ''): self.memory_split = contents.memorysplit
         if (contents.tracefile != ''):   self.tracefile = contents.tracefile
 
-    def apply_split(self):
+    def split_memory(self):
         '''
             Apply the memory split between the two processes.
-                'a:b' --> where a and b are positive integers > 0 that represent the ratios of each process's memory allocation. 
-                1:2 split means that the second process gets twice as many frames as the first process (i.e., the first process gets one third and the second two thirds). 
-                The sum of a and b evenly divided the total number of frames.
-
-            then initialize two objects to track each process.
-
-            returns --> two tables with split frames.
+            returns - two tables with split frames.
         '''
         if (int(self.memory_split[0]) < 0 or int(self.memory_split[2]) < 0 ):
             return -1
@@ -62,16 +55,18 @@ class virtual_memory_sim():
 
     
     def run_sim(self):
-        tables = self.apply_split()
+        tables = self.split_memory()
         for i, line in enumerate(open(self.tracefile)):
             self.memory_accesses += 1
             line = line.split(' ')
             dirty_bit = 0 if line[0]=='l' else 1
-            shift  =  int(math.log(int(self.page_size),2))
-            frame = str(line[1][2:(len(line[1])-(shift+1))])
-            offset = line[1][(len(line[1])-shift):]
+            offset =  int(math.log(int(self.page_size),2)) + 10
+            frame = int(line[1], 16) >> offset
+
             table_idx = int(line[2][0])
+
             
+            prev = self.page_faults
             # miss
             # print(tables[table_idx].entries)
             if frame not in tables[table_idx].entries.keys():
@@ -94,24 +89,30 @@ class virtual_memory_sim():
                     
                     # remove entry
                     tables[table_idx].entries.pop(frame_to_evict)
-                tables[table_idx].entries[frame] = (dirty_bit, i)
+
+                tables[table_idx].entries[frame] = [dirty_bit, i]
             # hit
             else:
                 # print('found')
                 # update entry with new lru_counter and dirty bit
                 if tables[table_idx].entries[frame][0] == 1 or dirty_bit == 1:
-                    tables[table_idx].entries[frame] = (1, i)
+                    tables[table_idx].entries[frame] = [1, i]
                 else:
-                    tables[table_idx].entries[frame] = (0, i)
+                    tables[table_idx].entries[frame] = [0, i]
 
             # # debug
-            # print(str(i) + ' : ' + frame + ' : ' + str(line[2][0]))
-            # print('-------------------')
-            # print(tables[0].entries)
-            # print(tables[1].entries)
-            # print('page faults: ' + str(self.page_faults))
+            # if ( table_idx == 0):
+            #     print(str(i) + ' : ' + frame + ' : ' + str(table_idx))
+            #     print('-------------------')
+            #     print(tables[0].entries)
+            #     print(tables[1].entries)
+            #     print('page faults: ' + str(self.page_faults))
+            #     print('\n')
+            # print(frame)
             # print('\n')
-            # if i > 100: break
+            # if i > 1: break
+    
+
 
            
     
