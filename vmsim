@@ -120,6 +120,7 @@ class virtual_memory_sim():
     def print_results(self):
         print("Algorithm: " + self.algorithm.upper())
         print("Number of frames: " + str(self.frames))
+        print("Page size: " + str(self.frames))
         print("Total memory accesses: " + str(self.memory_accesses))
         print("Total page faults: " + str(self.page_faults))
         print("Total writes to disk: " + str(self.disk_writes))
