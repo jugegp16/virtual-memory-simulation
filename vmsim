@@ -119,10 +119,10 @@ class virtual_memory_sim():
     # change to __str__
     def print_results(self):
         print("Algorithm: " + self.algorithm.upper())
-        print("Number of Frames: " + str(self.frames))
-        print("Total Memory Accesses: " + str(self.memory_accesses))
-        print("Total Page Faults: " + str(self.page_faults))
-        print("Total Writes to Disk: " + str(self.disk_writes))
+        print("Number of frames: " + str(self.frames))
+        print("Total memory accesses: " + str(self.memory_accesses))
+        print("Total page faults: " + str(self.page_faults))
+        print("Total writes to disk: " + str(self.disk_writes))
 
 class table():
     '''
