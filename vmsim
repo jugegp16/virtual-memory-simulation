@@ -5,7 +5,6 @@ import sys
 
 class virtual_memory_sim():
     '''
-
         Virtual memory simulator
         Run through the memory references of the trace file
         Decide the action taken for each address 
@@ -16,7 +15,6 @@ class virtual_memory_sim():
             
         After dealing with all the memory references for both simulated processes
         print out summary statistics in the following format
-
     '''
     def __init__(self):
         self.parser = argparse.ArgumentParser()
@@ -30,6 +28,9 @@ class virtual_memory_sim():
         self.disk_writes = 0
 
     def parse_args(self):
+        '''
+           parses the command line arguements and subcommands using argparse.py
+        '''
         self.parser.add_argument('-a', '--algorithm',     type=str, choices = ['opt', 'lru'])
         self.parser.add_argument('-n', '--numframes',  type=int)
         self.parser.add_argument('-p', '--pagesize',   type=int)
@@ -51,72 +52,128 @@ class virtual_memory_sim():
             return -1
         ratio1 = int(self.memory_split[0]) / (int(self.memory_split[0])+int(self.memory_split[2]))
         ratio2 = int(self.memory_split[2]) / (int(self.memory_split[0])+int(self.memory_split[2]))
-        return [table(ratio1*self.frames), table(ratio2*self.frames)]
+        return [page_table(ratio1*self.frames), page_table(ratio2*self.frames)]
 
+    def parse_line(self, line):
+        '''
+            @params - a single line of the trace file
+            returns - dirty bit, address of frame, and table-idx which specifies which process is running.
+        '''
+        line = line.split(' ')
+        dirty_bit = 0 if line[0]=='l' else 1
+        offset =  int(math.log(self.page_size,2)) + 10
+        frame = int(line[1], 16) >> offset
+        table_idx = int(line[2][0])
+        return dirty_bit, frame, table_idx
     
     def run_sim(self):
+        '''
+            runs the virtual memory simulation for given replacment policy
+        '''
+        if self.algorithm == 'opt': self.opt_sim()
+        else: self.lru_sim()
+    
+    def lru_sim(self):
+        '''
+           Least recently used(LRU) simulation.
+            * counter implementaion. 
+        '''
         tables = self.split_memory()
         for i, line in enumerate(open(self.tracefile)):
             self.memory_accesses += 1
-            line = line.split(' ')
-            dirty_bit = 0 if line[0]=='l' else 1
-            offset =  int(math.log(int(self.page_size),2)) + 10
-            frame = int(line[1], 16) >> offset
+            dirty_bit, frame, table_idx =  self.parse_line(line)
 
-            table_idx = int(line[2][0])
-
-            
-            prev = self.page_faults
-            # miss
-            # print(tables[table_idx].entries)
-            if frame not in tables[table_idx].entries.keys():
-                # print(frame)
+            if frame not in tables[table_idx].entries.keys():       # miss
                 self.page_faults += 1
-                frame_to_evict = None
 
-                if tables[table_idx].isFull():
+                if tables[table_idx].isFull():                      # table full -- must evict
+                    frame_to_evict = None
 
-                    # find lru
                     lru = sys.maxsize
-                    for addr in tables[table_idx].entries.keys():
+                    for addr in tables[table_idx].entries.keys():           # find lru
                         if tables[table_idx].entries[addr][1] < lru:
                             lru = tables[table_idx].entries[addr][1]
                             frame_to_evict = addr
                     
-                    # check dirty bit
-                    if tables[table_idx].entries[frame_to_evict][0] == 1:
+                    if tables[table_idx].entries[frame_to_evict][0] == 1:   # check dirty bit
                         self.disk_writes += 1
-                    
-                    # remove entry
-                    tables[table_idx].entries.pop(frame_to_evict)
+                    tables[table_idx].entries.pop(frame_to_evict)           # remove entry
 
                 tables[table_idx].entries[frame] = [dirty_bit, i]
-            # hit
-            else:
-                # print('found')
-                # update entry with new lru_counter and dirty bit
+
+            else:                                                           # hit
                 if tables[table_idx].entries[frame][0] == 1 or dirty_bit == 1:
                     tables[table_idx].entries[frame] = [1, i]
                 else:
                     tables[table_idx].entries[frame] = [0, i]
 
-            # # debug
-            # if ( table_idx == 0):
-            #     print(str(i) + ' : ' + frame + ' : ' + str(table_idx))
-            #     print('-------------------')
-            #     print(tables[0].entries)
-            #     print(tables[1].entries)
-            #     print('page faults: ' + str(self.page_faults))
-            #     print('\n')
-            # print(frame)
-            # print('\n')
-            # if i > 1: break
-    
+    def opt_sim(self):
+        '''
+            Optimal page replacement algorithm
+        '''
+        tables = self.split_memory()
+        for i, line in enumerate(open(self.tracefile)):
+            self.memory_accesses += 1
+            dirty_bit, frame, table_idx =  self.parse_line(line)
+
+            if frame not in tables[table_idx].freq:
+                tables[table_idx].freq[frame] = [i]
+            else:
+                tables[table_idx].freq[frame].append(i)
+
+            # if i == 50: 
+            #     # tables[table_idx].entries[frame].pop(0)
+            #     for key in tables[table_idx].freq:
+            #         print (tables[table_idx].freq[key])
+            #     break
+
+        for i, line in enumerate(open(self.tracefile)):
+            self.memory_accesses += 1
+            dirty_bit, frame, table_idx =  self.parse_line(line)
+
+            # miss 
+            if frame not in tables[table_idx].entries.keys():
+                self.page_faults += 1
+
+                # table full -- must evict
+                if tables[table_idx].isFull():
+                    frame_to_evict = None
+
+                    # check freq table for address
+                    nxt_access = -1
+                    for key in tables[table_idx].entries.keys():
+                        
+                        # add in lru tie
+                        if len(tables[table_idx].freq[key])==0:           # not accessed again
+                            frame_to_evict = key
+                            break
+
+                        if  tables[table_idx].freq[key][0] > nxt_access:     # accessed again -- removed largest.
+                            nxt_access = tables[table_idx].freq[key][0]
+                            frame_to_evict = key
+
+                        # print(tables[table_idx].freq[key][0])
+
+                        
+                        # tables[table_idx].freq[frame] =
+                    
+                    if tables[table_idx].entries[frame_to_evict][0] == 1:   # check dirty bit
+                        self.disk_writes += 1
+                    tables[table_idx].entries.pop(frame_to_evict)           # remove entry
+
+                # print(tables[table_idx].freq[frame])
+                tables[table_idx].freq[frame].pop(0)
+                tables[table_idx].entries[frame] = [dirty_bit, i]
+
+            # hit
+            else:
+                tables[table_idx].freq[frame].pop(0)
+                if tables[table_idx].entries[frame][0] == 1 or dirty_bit == 1:
+                    tables[table_idx].entries[frame] = [1, i]
+                else:
+                    tables[table_idx].entries[frame] = [0, i]
 
 
-           
-    
-    
     # change to __str__
     def print_results(self):
         print("Algorithm: " + self.algorithm.upper())
@@ -126,15 +183,20 @@ class virtual_memory_sim():
         print("Total page faults: " + str(self.page_faults))
         print("Total writes to disk: " + str(self.disk_writes))
 
-class table():
+class page_table():
     '''
-
+        
     '''
     def __init__(self, frames):
         self.frames = frames
         self.entries = {}
+        self.freq = {}      # for OPT
     
     def isFull(self):
+        '''
+            checks if the page table is full
+            @ returns true if the page table is full
+        '''
         if len(self.entries) == self.frames: return True
         return False
 
