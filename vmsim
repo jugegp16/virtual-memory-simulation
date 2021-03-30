@@ -26,6 +26,7 @@ class virtual_memory_sim():
         self.memory_accesses = 0
         self.page_faults = 0
         self.disk_writes = 0
+        self.offset = 0
 
     def parse_args(self):
         '''
@@ -61,8 +62,8 @@ class virtual_memory_sim():
         '''
         line = line.split(' ')
         dirty_bit = 0 if line[0]=='l' else 1
-        offset =  int(math.log(self.page_size,2)) + 10
-        frame = int(line[1], 16) >> offset
+        self.offset =  int(math.log(self.page_size,2)) + 10 if self.offset == 0 else self.offset
+        frame = int(line[1], 16) >> self.offset
         table_idx = int(line[2][0])
         return dirty_bit, frame, table_idx
     
