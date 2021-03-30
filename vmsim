@@ -27,7 +27,7 @@ class virtual_memory_sim():
         self.tracefile = ''
 
         self.memory_accesses = 0
-        self.page_faults = 1
+        self.page_faults = 0
         self.disk_writes = 0
 
     def parse_args(self):
