@@ -26,7 +26,7 @@ class virtual_memory_sim():
         self.memory_accesses = 0
         self.page_faults = 0
         self.disk_writes = 0
-        self.offset = 0
+        self.offset = None
 
     def parse_args(self):
         '''
@@ -40,7 +40,7 @@ class virtual_memory_sim():
         contents = self.parser.parse_args()
         if (contents.algorithm != '' ): self.algorithm = contents.algorithm
         if (contents.numframes != 0): self.frames = contents.numframes
-        if (contents.pagesize != 0):  self.page_size = contents.pagesize
+        if (contents.pagesize != 0):  self.offset = int(math.log(contents.pagesize,2)) + 10
         if (contents.memorysplit != ''): self.memory_split = contents.memorysplit
         if (contents.tracefile != ''):   self.tracefile = contents.tracefile
 
@@ -62,7 +62,6 @@ class virtual_memory_sim():
         '''
         line = line.split(' ')
         dirty_bit = 0 if line[0]=='l' else 1
-        self.offset =  int(math.log(self.page_size,2)) + 10 if self.offset == 0 else self.offset
         frame = int(line[1], 16) >> self.offset
         table_idx = int(line[2][0])
         return dirty_bit, frame, table_idx
@@ -123,9 +122,11 @@ class virtual_memory_sim():
                 tables[table_idx].freq[frame].append(i)
             # if i == 50: 
             #     # tables[table_idx].entries[frame].pop(0)
-            #     for key in tables[table_idx].freq:
-            #         print (tables[table_idx].freq[key])
-            #     break
+
+            #     print (tables[table_idx].freq)
+            #     # for key in tables[table_idx].freq:
+            #     #     print (tables[table_idx].freq[key])
+            #     # break
         # for keys in tables[table_idx].entries.keys():
         #     tables[table_idx].freq[keys].append(sys.maxsize)
 
@@ -140,6 +141,11 @@ class virtual_memory_sim():
                 # table full -- must evict
                 if tables[table_idx].isFull():
                     frame_to_evict = None
+
+                    # def func(key):
+                    #     return tables[table_idx].freq[key][0]
+
+                    # frame_to_evict = max(tables[table_idx].entries, key=func)
 
                     # check freq table for address
                     nxt_access = -1
