@@ -121,12 +121,13 @@ class virtual_memory_sim():
                 tables[table_idx].freq[frame] = [i]
             else:
                 tables[table_idx].freq[frame].append(i)
-
             # if i == 50: 
             #     # tables[table_idx].entries[frame].pop(0)
             #     for key in tables[table_idx].freq:
             #         print (tables[table_idx].freq[key])
             #     break
+        # for keys in tables[table_idx].entries.keys():
+        #     tables[table_idx].freq[keys].append(sys.maxint)
 
         for i, line in enumerate(open(self.tracefile)):
             self.memory_accesses += 1
@@ -152,11 +153,6 @@ class virtual_memory_sim():
                         if  tables[table_idx].freq[key][0] > nxt_access:     # accessed again -- removed largest.
                             nxt_access = tables[table_idx].freq[key][0]
                             frame_to_evict = key
-
-                        # print(tables[table_idx].freq[key][0])
-
-                        
-                        # tables[table_idx].freq[frame] =
                     
                     if tables[table_idx].entries[frame_to_evict][0] == 1:   # check dirty bit
                         self.disk_writes += 1
