@@ -127,7 +127,7 @@ class virtual_memory_sim():
             #         print (tables[table_idx].freq[key])
             #     break
         # for keys in tables[table_idx].entries.keys():
-        #     tables[table_idx].freq[keys].append(sys.maxint)
+        #     tables[table_idx].freq[keys].append(sys.maxsize)
 
         for i, line in enumerate(open(self.tracefile)):
             self.memory_accesses += 1
@@ -143,16 +143,16 @@ class virtual_memory_sim():
 
                     # check freq table for address
                     nxt_access = -1
+                    lru = sys.maxsize                                   # tie breaker
                     for key in tables[table_idx].entries.keys():
                         
-                        # add in lru tie
-                        if len(tables[table_idx].freq[key])==0:           # not accessed again
+                        if len(tables[table_idx].freq[key])==0 and tables[table_idx].entries[key][1] < lru:           # not accessed again
+                            lru = tables[table_idx].entries[key][1]
                             frame_to_evict = key
-                            break
-
-                        if  tables[table_idx].freq[key][0] > nxt_access:     # accessed again -- removed largest.
-                            nxt_access = tables[table_idx].freq[key][0]
-                            frame_to_evict = key
+                        elif lru == sys.maxsize:     # accessed again -- removed largest.
+                            if tables[table_idx].freq[key][0] > nxt_access:
+                                nxt_access = tables[table_idx].freq[key][0]
+                                frame_to_evict = key
                     
                     if tables[table_idx].entries[frame_to_evict][0] == 1:   # check dirty bit
                         self.disk_writes += 1
@@ -160,6 +160,7 @@ class virtual_memory_sim():
 
                 # print(tables[table_idx].freq[frame])
                 tables[table_idx].freq[frame].pop(0)
+
                 tables[table_idx].entries[frame] = [dirty_bit, i]
 
             # hit
