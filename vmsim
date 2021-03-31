@@ -40,7 +40,7 @@ class virtual_memory_sim():
         contents = self.parser.parse_args()
         if (contents.algorithm != '' ): self.algorithm = contents.algorithm
         if (contents.numframes != 0): self.frames = contents.numframes
-        if (contents.pagesize != 0):  self.offset = int(math.log(contents.pagesize,2)) + 10
+        if (contents.pagesize != 0):  self.offset = int(math.log2(contents.pagesize)) + 10
         if (contents.memorysplit != ''): self.memory_split = contents.memorysplit
         if (contents.tracefile != ''):   self.tracefile = contents.tracefile
 
@@ -155,7 +155,7 @@ class virtual_memory_sim():
                         if len(tables[table_idx].freq[key])==0 and tables[table_idx].entries[key][1] < lru:           # not accessed again
                             lru = tables[table_idx].entries[key][1]
                             frame_to_evict = key
-                        elif lru == sys.maxsize:     # accessed again -- removed largest.
+                        elif lru == sys.maxsize:                            # accessed again -- removed largest.
                             if tables[table_idx].freq[key][0] > nxt_access:
                                 nxt_access = tables[table_idx].freq[key][0]
                                 frame_to_evict = key
@@ -164,9 +164,7 @@ class virtual_memory_sim():
                         self.disk_writes += 1
                     tables[table_idx].entries.pop(frame_to_evict)           # remove entry
 
-                # print(tables[table_idx].freq[frame])
                 tables[table_idx].freq[frame].pop(0)
-
                 tables[table_idx].entries[frame] = [dirty_bit, i]
 
             # hit
