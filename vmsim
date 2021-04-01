@@ -117,7 +117,6 @@ class virtual_memory_sim():
         '''
         tables = self.split_memory()
         for i, line in enumerate(open(self.tracefile)):
-            self.memory_accesses += 1
             dirty_bit, frame, table_idx =  self.parse_line(line)
 
             if frame not in tables[table_idx].freq:
