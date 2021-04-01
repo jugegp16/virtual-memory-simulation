@@ -2,6 +2,8 @@
 import argparse
 import math
 import sys
+import cProfile
+import re
 
 class virtual_memory_sim():
     '''
@@ -40,9 +42,11 @@ class virtual_memory_sim():
         contents = self.parser.parse_args()
         if (contents.algorithm != '' ): self.algorithm = contents.algorithm
         if (contents.numframes != 0): self.frames = contents.numframes
-        if (contents.pagesize != 0):  self.offset = int(math.log2(contents.pagesize)) + 10
+        if (contents.pagesize != 0):  self.page_size = contents.pagesize
+        self.offset = int(math.log2(contents.pagesize)) + 10
         if (contents.memorysplit != ''): self.memory_split = contents.memorysplit
         if (contents.tracefile != ''):   self.tracefile = contents.tracefile
+        # if '64' in self.tracefile and self.algorithm == 'opt': return
 
     def split_memory(self):
         '''
@@ -120,16 +124,12 @@ class virtual_memory_sim():
                 tables[table_idx].freq[frame] = [i]
             else:
                 tables[table_idx].freq[frame].append(i)
-            # if i == 50: 
-            #     # tables[table_idx].entries[frame].pop(0)
 
-            #     print (tables[table_idx].freq)
-            #     # for key in tables[table_idx].freq:
-            #     #     print (tables[table_idx].freq[key])
-            #     # break
-        # for keys in tables[table_idx].entries.keys():
-        #     tables[table_idx].freq[keys].append(sys.maxsize)
+        for table in tables:
+            for addr in table.freq:
+                table.freq[addr] = table.freq[addr][::-1]
 
+            
         for i, line in enumerate(open(self.tracefile)):
             self.memory_accesses += 1
             dirty_bit, frame, table_idx =  self.parse_line(line)
@@ -142,11 +142,6 @@ class virtual_memory_sim():
                 if tables[table_idx].isFull():
                     frame_to_evict = None
 
-                    # def func(key):
-                    #     return tables[table_idx].freq[key][0]
-
-                    # frame_to_evict = max(tables[table_idx].entries, key=func)
-
                     # check freq table for address
                     nxt_access = -1
                     lru = sys.maxsize                                   # tie breaker
@@ -156,20 +151,20 @@ class virtual_memory_sim():
                             lru = tables[table_idx].entries[key][1]
                             frame_to_evict = key
                         elif lru == sys.maxsize:                            # accessed again -- removed largest.
-                            if tables[table_idx].freq[key][0] > nxt_access:
-                                nxt_access = tables[table_idx].freq[key][0]
+                            if tables[table_idx].freq[key][-1] > nxt_access:
+                                nxt_access = tables[table_idx].freq[key][-1]
                                 frame_to_evict = key
                     
                     if tables[table_idx].entries[frame_to_evict][0] == 1:   # check dirty bit
                         self.disk_writes += 1
                     tables[table_idx].entries.pop(frame_to_evict)           # remove entry
 
-                tables[table_idx].freq[frame].pop(0)
+                tables[table_idx].freq[frame].pop()
                 tables[table_idx].entries[frame] = [dirty_bit, i]
 
             # hit
             else:
-                tables[table_idx].freq[frame].pop(0)
+                tables[table_idx].freq[frame].pop()
                 if tables[table_idx].entries[frame][0] == 1 or dirty_bit == 1:
                     tables[table_idx].entries[frame] = [1, i]
                 else:
@@ -206,5 +201,6 @@ class page_table():
 if __name__ == "__main__":
     vm_sim = virtual_memory_sim()
     vm_sim.parse_args()
+    # cProfile.run('vm_sim.run_sim()')
     vm_sim.run_sim()
     vm_sim.print_results()
