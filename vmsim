@@ -40,13 +40,17 @@ class virtual_memory_sim():
         self.parser.add_argument('-s', '--memorysplit',type=str)
         self.parser.add_argument('tracefile', type=str)
         contents = self.parser.parse_args()
-        if (contents.algorithm != '' ): self.algorithm = contents.algorithm
-        if (contents.numframes != 0): self.frames = contents.numframes
-        if (contents.pagesize != 0):  self.page_size = contents.pagesize
-        self.offset = int(math.log2(contents.pagesize)) + 10
-        if (contents.memorysplit != ''): self.memory_split = contents.memorysplit
-        if (contents.tracefile != ''):   self.tracefile = contents.tracefile
-        # if '64' in self.tracefile and self.algorithm == 'opt': return
+        if (contents.algorithm != '' ):
+            self.algorithm = contents.algorithm
+        if (contents.numframes != 0):
+            self.frames = contents.numframes
+        if (contents.pagesize != 0):  
+            self.page_size = contents.pagesize
+            self.offset = int(math.log2(contents.pagesize)) + 10
+        if (contents.memorysplit != ''):
+            self.memory_split = contents.memorysplit
+        if (contents.tracefile != ''):
+            self.tracefile = contents.tracefile
 
     def split_memory(self):
         '''
@@ -79,8 +83,7 @@ class virtual_memory_sim():
     
     def lru_sim(self):
         '''
-           Least recently used(LRU) simulation.
-            * counter implementaion. 
+           Least recently used(LRU) simulation (counter implementaion)
         '''
         tables = self.split_memory()
         for i, line in enumerate(open(self.tracefile)):
@@ -99,8 +102,9 @@ class virtual_memory_sim():
                             lru = tables[table_idx].entries[addr][1]
                             frame_to_evict = addr
                     
-                    if tables[table_idx].entries[frame_to_evict][0] == 1:   # check dirty bit
+                    if tables[table_idx].entries[frame_to_evict][0] == 1:   # check if disk write
                         self.disk_writes += 1
+
                     tables[table_idx].entries.pop(frame_to_evict)           # remove entry
 
                 tables[table_idx].entries[frame] = [dirty_bit, i]
@@ -116,7 +120,7 @@ class virtual_memory_sim():
             Optimal page replacement algorithm
         '''
         tables = self.split_memory()
-        for i, line in enumerate(open(self.tracefile)):
+        for i, line in enumerate(open(self.tracefile)):             # first pass -- load frq map
             dirty_bit, frame, table_idx =  self.parse_line(line)
 
             if frame not in tables[table_idx].freq:
@@ -124,45 +128,46 @@ class virtual_memory_sim():
             else:
                 tables[table_idx].freq[frame].append(i)
 
+        # reverse frq list to optimize runtime complexity
+        #   -- take advantage of pop()
+        #   -- O(1) if last entry otherwise O(n)
         for table in tables:
             for addr in table.freq:
                 table.freq[addr] = table.freq[addr][::-1]
-
             
-        for i, line in enumerate(open(self.tracefile)):
+        for i, line in enumerate(open(self.tracefile)):                 # second pass -- simulation
             self.memory_accesses += 1
             dirty_bit, frame, table_idx =  self.parse_line(line)
 
-            # miss 
-            if frame not in tables[table_idx].entries.keys():
+            if frame not in tables[table_idx].entries.keys():           # miss 
                 self.page_faults += 1
 
-                # table full -- must evict
-                if tables[table_idx].isFull():
+                if tables[table_idx].isFull():                          # table full -- must evict
                     frame_to_evict = None
 
-                    # check freq table for address
-                    nxt_access = -1
-                    lru = sys.maxsize                                   # tie breaker
+                    nxt_access, lru = -1, sys.maxsize
                     for key in tables[table_idx].entries.keys():
                         
-                        if len(tables[table_idx].freq[key])==0 and tables[table_idx].entries[key][1] < lru:           # not accessed again
+                        # compute lru when one page is not accessed again 
+                        if len(tables[table_idx].freq[key])==0 and tables[table_idx].entries[key][1] < lru:
                             lru = tables[table_idx].entries[key][1]
                             frame_to_evict = key
-                        elif lru == sys.maxsize:                            # accessed again -- removed largest.
+
+                        # find optimal -- page accessed furthest into future
+                        elif lru == sys.maxsize:
                             if tables[table_idx].freq[key][-1] > nxt_access:
                                 nxt_access = tables[table_idx].freq[key][-1]
                                 frame_to_evict = key
                     
-                    if tables[table_idx].entries[frame_to_evict][0] == 1:   # check dirty bit
+                    if tables[table_idx].entries[frame_to_evict][0] == 1:   # check if disk write
                         self.disk_writes += 1
+
                     tables[table_idx].entries.pop(frame_to_evict)           # remove entry
 
                 tables[table_idx].freq[frame].pop()
                 tables[table_idx].entries[frame] = [dirty_bit, i]
 
-            # hit
-            else:
+            else:                                                           # hit
                 tables[table_idx].freq[frame].pop()
                 if tables[table_idx].entries[frame][0] == 1 or dirty_bit == 1:
                     tables[table_idx].entries[frame] = [1, i]
@@ -170,9 +175,11 @@ class virtual_memory_sim():
                     tables[table_idx].entries[frame] = [0, i]
 
 
-    # change to __str__
     def print_results(self):
-        print("Algorithm: " + self.algorithm.upper())
+        '''
+            print relevant information and results from the simulation 
+        '''
+        print("Algorithm: " + str(self.algorithm.upper()))
         print("Number of frames: " + str(self.frames))
         print("Page size: " + str(self.page_size) + " KB")
         print("Total memory accesses: " + str(self.memory_accesses))
@@ -181,21 +188,20 @@ class virtual_memory_sim():
 
 class page_table():
     '''
-        
+        page table for a single process. 
     '''
     def __init__(self, frames):
         self.frames = frames
-        self.entries = {}
-        self.freq = {}      # for OPT
+        self.entries = {}   # {page number in table: [dirty bit, line number]}
+        self.freq = {}      # for optimal. {page number: [line numbers page accessed]}
     
     def isFull(self):
         '''
             checks if the page table is full
-            @ returns true if the page table is full
+            returns - true if the page table is full
         '''
         if len(self.entries) == self.frames: return True
         return False
-
 
 if __name__ == "__main__":
     vm_sim = virtual_memory_sim()
