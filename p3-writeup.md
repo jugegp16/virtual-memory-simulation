@@ -17,8 +17,8 @@ Frame Size
 ----------
 * The memory split is critical with small frame sizes
 * The memory split is less influential as the frame size increases.
-  * 1:3 split reaches the worst result with 16 frames but preforms idenitcal with 1024 frames
-* Both algorithms preform identically when the frame size is maximumized
+  * 1:3 split reaches the worst results with 16 frames rather than 1024 frames
+* Both algorithms perfom identically when the frame size is maximumized
   * 4KB and 4MB page sizes both have same results across all memory splits.
 
 ![graphs](graphs.png)
