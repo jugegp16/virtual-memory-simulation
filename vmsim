@@ -57,7 +57,7 @@ class virtual_memory_sim():
             apply the memory split between the two processes.
             
             returns:
-                two tables with split frames.
+                two page tables with split frames.
         '''
         if (int(self.memory_split[0]) < 0 or int(self.memory_split[2]) < 0 ):
             return -1
@@ -90,7 +90,7 @@ class virtual_memory_sim():
     
     def lru_sim(self):
         '''
-           perfroms the least recently used (LRU) simulation (counter implementaion)
+           performs the least recently used (LRU) simulation (counter implementaion)
         '''
         tables = self.split_memory()
         for i, line in enumerate(open(self.tracefile)):
