@@ -6,14 +6,13 @@ Experiments
 ----------
 I simulated a memory trace (1.trace) with differnt frame and page sizes, the results are shown in the graphs below. I used the OPT algorithm as my baseline for my comparisons with LRU. Here are some key points i noted...
 
-Page Size 
-----------
+# Page Size 
 * Increasing the page size decreases the number of page faults
   * page faults increase 35,000% in 1:1 with 4KB vs 4MB page size
 * Increasing the frame size decreases total page faults (less dramatically then page size)
   * page faults increase 250% in 1:1 with 16 vs 1024 frames
 
-Frame Size
+# Frame Size
 ----------
 * The memory split is critical with small frame sizes
 * The memory split is less influential as the frame size increases.
