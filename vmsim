@@ -104,10 +104,10 @@ class virtual_memory_sim():
                     frame_to_evict = None
 
                     lru = sys.maxsize
-                    for addr in tables[table_idx].entries.keys():           # find lru
-                        if tables[table_idx].entries[addr][1] < lru:
-                            lru = tables[table_idx].entries[addr][1]
-                            frame_to_evict = addr
+                    for key in tables[table_idx].entries.keys():           # find lru
+                        if tables[table_idx].entries[key][1] < lru:
+                            lru = tables[table_idx].entries[key][1]
+                            frame_to_evict = key
                     
                     if tables[table_idx].entries[frame_to_evict][0] == 1:   # check if disk write
                         self.disk_writes += 1
@@ -139,8 +139,8 @@ class virtual_memory_sim():
         #   -- take advantage of pop()
         #   -- O(1) if last entry otherwise O(n)
         for table in tables:
-            for addr in table.freq:
-                table.freq[addr] = table.freq[addr][::-1]
+            for key in table.freq:
+                table.freq[key] = table.freq[key][::-1]
             
         for i, line in enumerate(open(self.tracefile)):                 # second pass -- simulation
             self.memory_accesses += 1
@@ -155,7 +155,7 @@ class virtual_memory_sim():
                     nxt_access, lru = -1, sys.maxsize
                     for key in tables[table_idx].entries.keys():
                         
-                        # compute lru when one page is not accessed again 
+                        # compute lru when at least one page is not accessed again 
                         if len(tables[table_idx].freq[key])==0 and tables[table_idx].entries[key][1] < lru:
                             lru = tables[table_idx].entries[key][1]
                             frame_to_evict = key
