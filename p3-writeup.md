@@ -4,7 +4,7 @@ In local page replacement, each process is allocated a certain number of physica
 
 # Experiments
 -------------------------
-I simulated a memory trace (1.trace) with differnt frame and page sizes, the results are shown in the graphs below. I used the OPT algorithm as my baseline for my comparisons with LRU. Here are some key points i noted...
+I simulated a memory trace (1.trace) with different frame and page sizes, the results are shown in the graphs below. I used the OPT algorithm as my baseline for my comparisons with LRU. Here are some key points i noted...
 
 Page Size 
 ----------
