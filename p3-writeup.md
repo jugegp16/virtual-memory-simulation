@@ -5,11 +5,15 @@ In local page replacement, each process is allocated a certain number of physica
 Experiments
 ----------
 I simulated a memory trace (1.trace) with differnt frame and page sizes, the results are shown in the graphs below. I used the OPT algorithm as my baseline for my comparisons with LRU. Here are some key points i noted...
+
+* page size
 * Increasing the page size decreases the number of page faults 
 * Increasing the frame size decreases total page faults 
-* The memory split is critical with small page sizes
-* The memory split is less influential as the frame size increases.
-* Both algorithms preform identically when the frame size is maximumized
+
+* frame size 
+> * The memory split is critical with small frame sizes
+> * The memory split is less influential as the frame size increases.
+> * Both algorithms preform identically when the frame size is maximumized
 
 ![graphs](graphs.png)
 
