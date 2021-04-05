@@ -54,8 +54,10 @@ class virtual_memory_sim():
 
     def split_memory(self):
         '''
-            Apply the memory split between the two processes.
-            returns - two tables with split frames.
+            apply the memory split between the two processes.
+            
+            returns:
+                two tables with split frames.
         '''
         if (int(self.memory_split[0]) < 0 or int(self.memory_split[2]) < 0 ):
             return -1
@@ -65,8 +67,13 @@ class virtual_memory_sim():
 
     def parse_line(self, line):
         '''
-            @params - a single line of the trace file
-            returns - dirty bit, address of frame, and table-idx which specifies which process is running.
+            parses the content of a memory refrence from the trace file.
+        
+            args:
+                a single line of the trace file.
+                
+            returns:
+                dirty bit, address of frame, and table-idx which specifies which process is running.
         '''
         line = line.split(' ')
         dirty_bit = 0 if line[0]=='l' else 1
@@ -76,14 +83,14 @@ class virtual_memory_sim():
     
     def run_sim(self):
         '''
-            runs the virtual memory simulation for given replacment policy
+            runs the virtual memory simulation for a given replacment algorithm.
         '''
         if self.algorithm == 'opt': self.opt_sim()
         else: self.lru_sim()
     
     def lru_sim(self):
         '''
-           Least recently used(LRU) simulation (counter implementaion)
+           perfroms the least recently used (LRU) simulation (counter implementaion)
         '''
         tables = self.split_memory()
         for i, line in enumerate(open(self.tracefile)):
@@ -117,7 +124,7 @@ class virtual_memory_sim():
 
     def opt_sim(self):
         '''
-            Optimal page replacement algorithm
+           performs the optimal page replacement algorithm simulation(OPT).
         '''
         tables = self.split_memory()
         for i, line in enumerate(open(self.tracefile)):             # first pass -- load frq map
@@ -177,7 +184,7 @@ class virtual_memory_sim():
 
     def print_results(self):
         '''
-            print relevant information and results from the simulation 
+            prints relevant information and results from the simulation 
         '''
         print("Algorithm: " + str(self.algorithm.upper()))
         print("Number of frames: " + str(self.frames))
@@ -198,7 +205,9 @@ class page_table():
     def isFull(self):
         '''
             checks if the page table is full
-            returns - true if the page table is full
+            
+            returns:
+                true if the page table is full
         '''
         if len(self.entries) == self.frames: return True
         return False
