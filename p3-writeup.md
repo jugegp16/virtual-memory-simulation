@@ -7,6 +7,7 @@ Experiments
 I simulated a memory trace (1.trace) with differnt frame and page sizes, the results are shown in the graphs below. I used the OPT algorithm as my baseline for my comparisons with LRU. Here are some key points i noted...
 > * OPT and LRU respond similarly to changes in frame size
 > * Increasing the page size decreases the number page faults 
-> * Increasing the frame size decreases total page faults
+* Increasing the frame size decreases total page faults
+
 ![graphs](graphs.png)
 
